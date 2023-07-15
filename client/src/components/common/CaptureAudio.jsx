@@ -1,8 +1,11 @@
 import { useStateProvider } from "@/context/StateContext";
+import { ADD_AUDIO_MESSAGE_ROUTE } from "@/utils/ApiRoutes";
 import React, { useEffect, useRef, useState } from "react";
 import { FaMicrophone, FaPauseCircle, FaPlay, FaStop, FaTrash } from "react-icons/fa";
 import { MdSend } from "react-icons/md";
 import WaveSurfer from "wavesurfer.js";
+import axios from "axios";
+import { reducerCases } from "@/context/constants";
 
 function CaptureAudio({hide}) {
 
@@ -15,16 +18,34 @@ function CaptureAudio({hide}) {
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isPlaying, setisPlaying] = useState(false);
+  const [renderedAudio, setRenderedAudio] = useState(null)
 
 const audioRef = useRef(null)
-const mediaRecorededRed = useRef(null)
+const mediaRecorderRed = useRef(null)
 const waveFormRef = useRef(null)
+
+useEffect(()=> {
+  let interval;
+  if (isRecording) {
+    interval = setInterval (() =>{
+      setRecordingDuration((prevDuration) => {
+        setTotalDuration(prevDuration + 1);
+        return prevDuration + 1;
+      });
+    }, 1000);
+  }
+
+  return () => {
+    clearInterval(interval);
+  };
+}, [isRecording]);
 
 useEffect(() => {
   const wavesurfer = WaveSurfer.create({
     container: waveFormRef.current,
     waveColor:"#ccc",
-    progressColor:"#7ae3c3",
+    progressColor:"#4a9eff",
+    cursorColor:"#7ae3c3",
     barWidth: 2,
     height: 30,
     responsive: true,
@@ -48,9 +69,10 @@ const handleStartRecording = () => {
   setCurrentPlaybackTime(0);
   setTotalDuration(0);
   setIsRecording(true);
+  setRecordedAudio(null);
   navigator.mediaDevices.getUserMedia({audio:true}).then((stream)=>{
     const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorededRed.current = mediaRecorder;
+    mediaRecorderRed.current = mediaRecorder;
     audioRef.current.srcObject = stream;
 
     const chunks = [];
@@ -64,30 +86,95 @@ const handleStartRecording = () => {
       waveform.load(audioURL);
     };
 
-    mediaRecorder.start()
+    mediaRecorder.start();
+
+  }).catch(error=> {
+    console.error("Error accessing microphone:", error);
   })
 }
 
-const handlePlayRecording = () => {
+useEffect(() => {
+  if(recordedAudio) {
+  const updatePlaybackTime = () => {
+    setCurrentPlaybackTime(recordedAudio.currentTime);
+  };
+  recordedAudio.addEventListener("timeupdate", updatePlaybackTime);
+  return () => {
+    recordedAudio.removeEventListener("timeupdate", updatePlaybackTime);
+  };
+ }
+}, [recordedAudio]);
 
-}
+const handlePlayRecording = () => {
+  if (recordedAudio) {
+    waveform.stop();
+    waveform.play();
+    recordedAudio.play();
+    setisPlaying(true);
+  }
+};
 const handlePauseRecording = () => {
-  
+  waveform.stop();
+  recordedAudio.pause();
+  setisPlaying(false);
 }
 
 const handleStopRecording = () => {
-  
-}
+  if (mediaRecorderRed.current && isRecording) {
+    mediaRecorderRed.current.stop();
+    setIsRecording(false);
+    waveform.stop();
+
+    const audioChunks = [];
+    mediaRecorderRed.current.addEventListener("dataavailable", (event) => {
+      audioChunks.push(event.data);
+    });
+
+    mediaRecorderRed.current.addEventListener("stop", () => {
+      const audioBlob = new Blob(audioChunks, {type: "audio/mp3"});
+      const audioFile = new File([audioBlob], "recording.mp3");
+      setRenderedAudio(audioFile);
+    })
+  }
+};
 
 const sendRecording = async () => {
-
+  try {
+    const formData = new FormData();
+    formData.append("audio", renderedAudio);
+    const response = await axios.post(ADD_AUDIO_MESSAGE_ROUTE, formData, {
+      headers:{
+        "Content-Type": "multipart/form-data",
+      },
+      params:{
+        from: userInfo.id,
+        to: currentChatUser.id,
+      }
+    })
+    if(response.status===201){
+      socket.current.emit("send-msg",{
+        to: currentChatUser?.id,
+        from: userInfo?.id,
+        message: response.data.message,
+      })
+      dispatch({
+        type:reducerCases.ADD_MESSAGE,
+        newMessage: {
+          ...response.data.message
+        },
+        fromSelf: true,
+      })
+    }
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 const formatTime = (time) => {
   if (isNaN(time)) return "00:00";
   const minutes = Math.floor(time / 60);
   const seconds = Math.floor(time % 60);
-  reuturn `${minutes.toString().padStart(2, "0")}:${seconds
+  return `${minutes.toString().padStart(2, "0")}:${seconds
     .toString()
     .padStart(2, "0")}`;
 };
@@ -118,7 +205,8 @@ const formatTime = (time) => {
       {isRecording ? (
       <div className="text-red-500 animate-pulse 2-60 text-center">
         Recording <span>{recordingDuration}s</span>
-      </div> ):( 
+      </div> 
+      ):( 
         <div>
           {
             recordedAudio &&
@@ -140,6 +228,7 @@ const formatTime = (time) => {
           <span>{formatTime(totalDuration)}</span>
         )}
         <audio ref={audioRef} hidden />
+        </div>
         <div className="mr-4">
           {!isRecording ? (
           <FaMicrophone className="text-red-500"
@@ -159,7 +248,6 @@ const formatTime = (time) => {
             onClick={sendRecording}
           />
         </div>
-    </div>
   </div>
   );
 }

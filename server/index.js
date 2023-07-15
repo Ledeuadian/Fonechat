@@ -5,11 +5,10 @@ import AuthRoutes from "./routes/AuthRoutes.js";
 import MessageRoutes from "./routes/MessageRoutes.js";
 import { Server } from "socket.io";
 
-
-
 dotenv.config();
 const app = express()
 
+app.use("/uploads/recordings", express.static("uploads/recordings"))
 app.use("/uploads/images/",express.static("uploads/images"));
 
 app.use(cors());
