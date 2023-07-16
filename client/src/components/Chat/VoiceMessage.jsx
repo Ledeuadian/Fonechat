@@ -7,6 +7,7 @@ import { calculateTime } from "@/utils/CalculateTime";
 import MessageStatus from "../common/MessageStatus";
 import { HOST } from "@/utils/ApiRoutes";
 
+
 function VoiceMessage({message}) {
 
   const [{currentChatUser, userInfo}] = useStateProvider();
@@ -114,7 +115,7 @@ function VoiceMessage({message}) {
                 {calculateTime(message.createdAt)}
               </span>
               {
-                message.senderId === userInfo.id && <MessageStatus messageStatus={message.MessageStatus} />
+                message.senderId === userInfo.id && <MessageStatus messageStatus={message.messageStatus} />
               }
             </div>
           </div>
