@@ -92,12 +92,12 @@ const reducer = (state, action) => {
                 return {
                     ...state,
                     incomingVoiceCall: action.incomingVoiceCall
-                }
+            };
             case reducerCases.SET_INCOMING_VIDEO_CALL:
                 return {
                     ...state,
                     incomingVideoCall: action.incomingVideoCall
-                }   
+            }; 
             case reducerCases.END_CALL:
                 return {
                     ...state,
@@ -105,7 +105,12 @@ const reducer = (state, action) => {
                     videoCall:undefined,
                     incomingVideoCall:undefined,
                     incomingVoiceCall:undefined,
-                } 
+            }; 
+            case reducerCases.SET_EXIT_CHAT:
+                return {
+                    ...state,
+                    currentChatUser:undefined
+                }
         default:
             return state;
     }

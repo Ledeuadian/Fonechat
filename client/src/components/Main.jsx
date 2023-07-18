@@ -97,6 +97,13 @@ function Main() {
         });
       });
 
+      socket.current.on("online-users",({onlineUsers}) =>{
+        dispatch({
+          type:reducerCases.SET_ONLINE_USERS,
+          onlineUsers,
+        });
+      });
+
       socket.current.on("video-call-rejected",()=> {
         dispatch({
           type:reducerCases.END_CALL,
