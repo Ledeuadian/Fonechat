@@ -1,4 +1,4 @@
-export const HOST = "https://fonechat-backend.vercel.app/";
+export const HOST = "https://fonechat-backend.vercel.app";
 
 const AUTH_ROUTE = `${HOST}/api/auth`;
 const MESSAGES_ROUTE = `${HOST}/api/messages`;
