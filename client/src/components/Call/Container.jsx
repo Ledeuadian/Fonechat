@@ -46,7 +46,7 @@ function Container({data}) {
           process.env.NEXT_PUBLIC_ZEGO_SERVER_ID
           );
           setZgVar(zg);
-          zg.on("roomStreamUpdate",async(roomId,updateType,streamList,extendedData)=>{
+          zg.on("roomStreamUpdate",async(roomID,updateType,streamList,extendedData)=>{
             if(updateType==="ADD"){
               const rmVideo = document.getElementById("remote-video");
               const vd = document.createElement(data.callType === "video" ? "video" : "audio") ;
