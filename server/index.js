@@ -12,7 +12,7 @@ app.use("/uploads/recordings", express.static("uploads/recordings"))
 app.use("/uploads/images/",express.static("uploads/images"));
 
 const corsOptions ={
-  origin:'https://fonechat.vercel.app', 
+  origin:'https://fonechat.vercel.app' || 'https://localhost:3000', 
   credentials:true,            
   optionSuccessStatus:200,
 }

@@ -6,7 +6,7 @@ const nextConfig = {
     NEXT_PUBLIC_ZEGO_SERVER_ID: "5b4a08b33ef762843aef2f29c96cd186"
   },
   images:{
-    domains:["http://fonechat.vercel.app"]
+    domains:["http://localhost:3000"]
     },
   }
 
